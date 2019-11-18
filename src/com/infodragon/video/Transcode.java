@@ -97,6 +97,86 @@ public class Transcode {
 			}
 		return true;
 		}
+	/**
+     *对ffmpeg无法解析的文件格式(wmv9，rm，rmvb等), 可以先用别的工具（mencoder）转换为avi(ffmpeg能解析的)格式.
+     */
+    private static String processAVI(int type) {
+        List<String> commend = new ArrayList<String>();
+        commend.add(ffmpegPath + "mencoder");
+        commend.add(inputPath);
+        commend.add("-oac");
+        commend.add("lavc");
+        commend.add("-lavcopts");
+        commend.add("acodec=mp3:abitrate=64");
+        commend.add("-ovc");
+        commend.add("xvid");
+        commend.add("-xvidencopts");
+        commend.add("bitrate=600");
+        commend.add("-of");
+        commend.add("mp4");
+        commend.add("-o");
+        commend.add(outputPath + "a.AVI");
+        try {
+            ProcessBuilder builder = new ProcessBuilder();
+            Process process = builder.command(commend).redirectErrorStream(true).start();
+            new PrintStream(process.getInputStream());
+            new PrintStream(process.getErrorStream());
+            process.waitFor();
+            return outputPath + "a.AVI";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    /**
+     * ffmpeg能解析的格式：（asx，asf，mpg，wmv，3gp，mp4，mov，avi，flv等）
+     */
+
+    private static boolean processFlv(String oldfilepath) {
+
+        if (!checkfile(inputPath)) {
+            System.out.println(oldfilepath + " is not file");
+            return false;
+        }
+        List<String> command = new ArrayList<String>();
+        command.add(ffmpegPath + "ffmpeg");
+        command.add("-i");
+        command.add(oldfilepath);
+        command.add("-ab");
+        command.add("56");
+        command.add("-ar");
+        command.add("22050");
+        command.add("-qscale");
+        command.add("8");
+        command.add("-r");
+        command.add("15");
+        command.add("-s");
+        command.add("600x500");
+        command.add(outputPath + "a.flv");
+        try {
+
+            // 方案1
+//            Process videoProcess = Runtime.getRuntime().exec(ffmpegPath + "ffmpeg -i " + oldfilepath
+//                    + " -ab 56 -ar 22050 -qscale 8 -r 15 -s 600x500 "
+//                    + outputPath + "a.flv");
+
+            // 方案2
+            Process videoProcess = new ProcessBuilder(command).redirectErrorStream(true).start();
+
+            new PrintStream(videoProcess.getErrorStream()).start();
+
+            new PrintStream(videoProcess.getInputStream()).start();
+
+            videoProcess.waitFor();
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 	private static boolean processMp4(String oldfilepath) {
 		if (!checkfile(inputPath)) {
 			System.out.print(oldfilepath + " is not file");
